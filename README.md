@@ -1,4 +1,6 @@
-# This is a simple python script to loop an mqtt payload with data from the ubuntu device. It is intended to be used as a monitoring agent in an Edge device. 
+# IoT UBUNTUmonitor
+
+## This is a simple python script to loop an mqtt payload with data from the ubuntu device. It is intended to be used as a monitoring agent in an Edge device. 
 
 ### to instal package
 
