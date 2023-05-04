@@ -10,6 +10,22 @@ broker_address = "127.0.0.1"
 # password = "mqtt_password"
 token_secret = "some_token"
 
+# find out the PID of the process to monitor
+cassandra_pid = None  # Initialize pid variable to None
+username = "cassandra"  # Replace with the username of the process owner you want to check
+process_name = "java"  # Replace with the name of the process you want to check
+for process in psutil.process_iter(['name', 'pid', 'username']):
+    if process.info['username'] == username and process.info['name'] == process_name:
+        cassandra_pid= process.info['pid']
+        break
+
+tb_pid = None
+username = "thingsboard"  # Replace with the name of the process you want to check
+for process in psutil.process_iter(['name', 'pid', 'username']):
+    if process.info['username'] == username and process.info['name'] == process_name:
+        tb_pid = process.info['pid']
+        break  
+        
 while True:
     # Get CPU usage
     cpu_percent = psutil.cpu_percent()
@@ -25,7 +41,22 @@ while True:
     disk_total = disk.total
     disk_used = disk.used
     disk_percent = disk.percent
+        
+    # Get process RAM
+    if cassandra_pid is not None:
+        process = psutil.Process(cassandra_pid)
+        cassandra_memory = process.memory_info()
+        cassandra_memory_percent = (100 * cassandra_memory.rss)/mem_total
+    else:
+        cassandra_memory_percent = 'not available'
 
+    if tb_pid is not None:
+        process = psutil.Process(tb_pid)
+        tb_memory = process.memory_info()
+        tb_memory_percent = (100 * tb_memory.rss)/mem_total
+    else:
+        tb_memory_percent = 'not available'
+        
     # Check the status of Kafka, Cassandra, and Thingsboard services
     def check_service_status(service):
         status = subprocess.run(['systemctl', 'is-active', service], capture_output=True, text=True).stdout.strip()
@@ -40,6 +71,8 @@ while True:
         'mem_total': mem_total,
         'mem_used': mem_used,
         'mem_percent': mem_percent,
+        'cassandra_mem_used' : "{:.2f}".format(cassandra_memory_percent),
+        'thingsboard_mem_used' : "{:.2f}".format(tb_memory_percent),
         'disk_total': disk_total,
         'disk_used': disk_used,
         'disk_percent': disk_percent,
